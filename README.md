@@ -82,7 +82,7 @@ As an enforcement point, Pyron integrates with a wide range of protocols and too
 
 #### Authorization (Enterprise Feature)
 
-* **Distributed Authorization** - *Enterprise Feature* - ability to integrate with Cloudentity * MicroPerimeter PDP to perform local authorization decisions including RBAC and ABAC and PBAC
+* **Distributed Authorization** - *Enterprise Feature* - ability to integrate with Cloudentity MicroPerimeter™️ PDP to perform local authorization decisions including RBAC and ABAC and PBAC
 * **Centralized Authorization** - *Enterprise Feature* - ability to integrate with Cloudentity centralized Trust Engine to perform advanced risk adaptive and data-level authorization 
 * **Policy-based authorization** - *Enterprise Feature* - enforce conditional, if/then/else policies as defined in the TrUST Engine.
 
@@ -154,6 +154,9 @@ After saving `rules.json`, wait 5 seconds for Pyron to automatically reload the 
 ##### Verify
 
 Executing `curl -v {pyron-ip}/example` should return 200 status code with body of `example.com` web page.
+
+> NOTE<br/>
+> Pyron's alive endpoint is at `/` path. `curl -v {pyron-ip}/` should return 200 status code.
 
 ##### Environment variables
 
