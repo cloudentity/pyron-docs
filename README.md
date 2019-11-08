@@ -60,7 +60,6 @@ Cloudentity Pyron can normalize your API by transforming and managing requests t
 * **HTTP Request Header transformation** - ability to inject/modify headers
 * **HTTP Request path parameter transformation** - ability to inject/modify path parameters
 * **HTTP Request body transformation** - ability to modify the request body (currently only available for JSON based payload)
-* **Identity context injection** - *Enterprise Feature* - ability to inject the JWT based header with client/user context to upstream services
 * **Cross-Domain Support** - CORS headers publishing and support
 
 #### Logging & Monitoring
@@ -73,20 +72,9 @@ Cloudentity Pyron can normalize your API by transforming and managing requests t
 
 As an enforcement point, Pyron integrates with a wide range of protocols and tools to ensure the request is not only authorized but also secure in the context of a wide range of risk and business rules.
 
-* **SSO based** - *Enterprise Feature* - authenticate and authorize the request using CE SSO token
 * **JWT OAuth Access Token based** - authenticate and authorize the request using OAuth Token
 * **Opaque OAuth Access Token based** - authenticate and authorize the request using Opaque OAuth Token with Introspection
-* **OAuth1.0 access token based** - *Enterprise Feature* - authenticate and authorize the request using OAuth 1.0b access token
-* **Custom JWT based** - *Enterprise Feature* - authenticate and authorize the request using custom JWT
-* **HMAC header-based** - *Enterprise Feature* - authenticate and authorize the request using HMAC authorization headers
 * **Fallback Authentication** - the ability to chain multiple authentication methods together and define the fallback scenarios Request authentication.
-
-
-#### Authorization (Enterprise Feature)
-
-* **Distributed Authorization** - *Enterprise Feature* - ability to integrate with Cloudentity MicroPerimeter™️ PDP to perform local authorization decisions including RBAC and ABAC and PBAC
-* **Centralized Authorization** - *Enterprise Feature* - ability to integrate with Cloudentity centralized Trust Engine to perform advanced risk adaptive and data-level authorization 
-* **Policy-based authorization** - *Enterprise Feature* - enforce conditional, if/then/else policies as defined in the TrUST Engine.
 
 #### Configuration
 
@@ -98,7 +86,7 @@ Pyron offers support for declarative configuration model out of the box with sup
 
 #### Integration with Microservices
 
-* **Ingress for Zero Trust Network** - *Enterprise Feature* - Integration with Zero Trust networks and ability to inject the client/user identity & service identity fingerprints to enable transaction-based micro-segmentation
+
 * **API Request retries** - ability to configure failure conditions and count of the API request retries strategy
 * **Request failover** - the ability to failover the request to next health instance of the upstream microservice
 * **Circuit Breaker support** - support for the circuit breaker pattern, works in concert with request retries and request failover
@@ -110,8 +98,7 @@ Cloudentity Pyron also provides broad API protection with many standard features
 
 * **Brute Force Protection (in-memory implementation)** - Ability to protect APIs against brute force attacks or perform simple rate spike arrests - in-memory implementation
 * **Brute Force Protection (IMDG based)** - *Enterprise Feature* - Ability to protect APIs against brute force attacks or make simple rate spike arrests - implementation using IMDG enabling shared state between all instances of the API Gateway.
-* **API Throttling** - *Enterprise Feature* - the ability to throttle the request based on IP/client ID/user
-* **Audit** - *Enterprise Feature* - Detailed audit logs enriched with authentication context of the user/client 
+
 
 #### Extensibility
 
