@@ -58,7 +58,7 @@ Instead, we will read the API keys from Vault secrets store and reference them i
 `ext.outputPath` value defines the root path of reference we will use. For example secret with key `example` can be referenced as `secrets.example`.
 
 > NOTE<br/>
-> Routing rules are read from `rules.json` file in `/opt/pyron` folder.
+> Routing rules are read from `rules.json` file in `/configs` folder.
 
 **Set environment variables in `envs` file:**
 

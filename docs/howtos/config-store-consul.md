@@ -1,6 +1,6 @@
 ## How to read routing rules from Consul
 
-So far the routing rules were read from `rules.json` file in `/opt/pyron` folder.
+So far the routing rules were read from `rules.json` file in `/configs` folder.
 In this how-to we will configure Pyron to read routing rules from Consul KV store by [consul-json](https://github.com/Cloudentity/vertx-tools#meta-custom-stores).
 
 **Set content of `meta-config.json`:**

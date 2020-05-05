@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  pyron:
+    container_name: pyron
+    image: docker.artifactory.syntegrity.com/pyron:latest
+    env_file: .pyron_env
+    volumes:
+      - ./configs:/configs
+    ports:
+     - 8080:8080
+    restart: on-failure

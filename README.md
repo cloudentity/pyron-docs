@@ -18,7 +18,6 @@
   * [CORS](docs/plugins/cors.md)
   * [Brute-force protection](docs/plugins/bruteforce.md)
   * [ACP authorizer](docs/plugins/acp-authz.md)
-* [Plugin development guide](docs/plugin-dev.md)
 * [How to](#how-to)
   * [Read routing rules from Consul](docs/howtos/config-store-consul.md)
   * [Read secrets from Vault](docs/howtos/config-store-vault.md)
@@ -113,13 +112,18 @@ Pyron also allows for custom plugins, which can be used to integrate legacy or p
 <a id="quickstart"></a>
 ## Quickstart
 
+>NOTE<br/>
+>You need `docker` and `docker-compose` installed with access to `docker.artifactory.syntegrity.com` artifactory.<br/>
+>Please contact [Cloudentity team](https://cloudentity.com) to get artifactory access.
+
 This section walks you through the steps required to expose an API using Pyron.
 We will expose `http://example.com` API at `/example` path.
-Once you SSH into a machine with running Pyron do the following:
+
+Checkout this repository, go into `install` directory in your terminal and execute `docker-compose up -d`.
 
 ##### Configure routing rule
 
-Set content of `/opt/pyron/rules.json` to:
+Set content of `/configs/rules.json` to:
 
 ```json
 {
@@ -145,15 +149,15 @@ After saving `rules.json`, wait 5 seconds for Pyron to automatically reload the 
 
 ##### Verify
 
-Executing `curl -v {pyron-ip}/example` should return 200 status code with body of `example.com` web page.
+Executing `curl -v localhost:8080/example` should return 200 status code with body of `example.com` web page.
 
 > NOTE<br/>
-> Pyron's alive endpoint is at `/` path. `curl -v {pyron-ip}/` should return 200 status code.
+> Pyron's alive endpoint is at `/` path. `curl -v localhost:8080/` should return 200 status code.
 
 ##### Environment variables
 
-You can configure Pyron using environment variables defined in `/opt/pyron/envs` file.
-After changing a variable, restart Pyron using `supervisorctl restart pyron` command.
+You can configure Pyron using environment variables defined in `install/configs/.pyron_env` file.
+After changing a variable, recreate Pyron container using `docker-compose up -d` command.
 
 <a id="config"></a>
 ## Configure
