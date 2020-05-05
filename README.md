@@ -218,7 +218,7 @@ Above `meta-config.json` defines two configuration stores: `config.json` from JA
 
 `config.json` defines minimal configuration required to run Pyron. Routing rules are provided in `rules.json`.
 
-You will find `meta-config.json` in the run folder (`run/standalone` or `run/docker`).
+You will find `meta-config.json` in `install/configs` folder.
 
 Learn how to read configuration from [Consul](docs/howtos/config-store-consul.md) and secrets from [Vault](docs/howtos/config-store-vault.md).
 
