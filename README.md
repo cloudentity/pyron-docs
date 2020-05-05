@@ -152,7 +152,7 @@ After saving `rules.json`, wait 5 seconds for Pyron to automatically reload the 
 Executing `curl -v localhost:8080/example` should return 200 status code with body of `example.com` web page.
 
 > NOTE<br/>
-> Pyron's alive endpoint is at `/` path. `curl -v localhost:8080/` should return 200 status code.
+> Pyron's alive endpoint is at `/alive` path. `curl -v localhost:8080/alive` should return 200 status code.
 
 ##### Environment variables
 
