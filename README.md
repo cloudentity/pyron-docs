@@ -16,6 +16,8 @@
     * OAuth 2 with opaque token introspection
   * [Request transformation](docs/plugins/transform-request.md)
   * [CORS](docs/plugins/cors.md)
+  * [Brute-force protection](docs/plugins/bruteforce.md)
+  * [ACP authorizer](docs/plugins/acp-authz.md)
 * [How to](#how-to)
   * [Read routing rules from Consul](docs/howtos/config-store-consul.md)
   * [Read secrets from Vault](docs/howtos/config-store-vault.md)
@@ -65,7 +67,7 @@ Cloudentity Pyron can normalize your API by transforming and managing requests t
 #### Logging & Monitoring
 * **Correlation ID integration** - Injection as well as utilization of the external correlation id to relate transactions for full tracing
 * **Open Tracing support** - provides visibility into cross-service communication and instrumentation, enabling the distributed tracing.
-* **Rich Access Logs** - the ability to stream logs to file, socket or Kafka 
+* **Rich Access Logs** - the ability to stream logs to file, socket or Kafka
 
 
 #### Authentication
@@ -80,7 +82,7 @@ As an enforcement point, Pyron integrates with a wide range of protocols and too
 
 Pyron offers support for declarative configuration model out of the box with support for various sources of configuration.
 
-* **File-based Declarative configuration** - the ability to load configuration from JSON/YAML based configuration files 
+* **File-based Declarative configuration** - the ability to load configuration from JSON/YAML based configuration files
 * **Consul & Vault based declarative configuration** - the ability to load configuration from Consul Key-Value Store as well as secrets and certificates from Vault
 * **HTTP based declarative configuration** - the ability to load configuration from an external HTTP endpoint
 
@@ -110,13 +112,18 @@ Pyron also allows for custom plugins, which can be used to integrate legacy or p
 <a id="quickstart"></a>
 ## Quickstart
 
+>NOTE<br/>
+>You need `docker` and `docker-compose` installed with access to `docker.artifactory.syntegrity.com` artifactory.<br/>
+>Please contact [Cloudentity team](https://cloudentity.com) to get artifactory access.
+
 This section walks you through the steps required to expose an API using Pyron.
 We will expose `http://example.com` API at `/example` path.
-Once you SSH into a machine with running Pyron do the following:
+
+Checkout this repository, go into `install` directory in your terminal and execute `docker-compose up -d`.
 
 ##### Configure routing rule
 
-Set content of `/opt/pyron/rules.json` to:
+Set content of `/configs/rules.json` to:
 
 ```json
 {
@@ -142,15 +149,15 @@ After saving `rules.json`, wait 5 seconds for Pyron to automatically reload the 
 
 ##### Verify
 
-Executing `curl -v {pyron-ip}/example` should return 200 status code with body of `example.com` web page.
+Executing `curl -v localhost:8080/example` should return 200 status code with body of `example.com` web page.
 
 > NOTE<br/>
-> Pyron's alive endpoint is at `/` path. `curl -v {pyron-ip}/` should return 200 status code.
+> Pyron's alive endpoint is at `/alive` path. `curl -v localhost:8080/alive` should return 200 status code.
 
 ##### Environment variables
 
-You can configure Pyron using environment variables defined in `/opt/pyron/envs` file.
-After changing a variable, restart Pyron using `supervisorctl restart pyron` command.
+You can configure Pyron using environment variables defined in `install/configs/.pyron_env` file.
+After changing a variable, recreate Pyron container using `docker-compose up -d` command.
 
 <a id="config"></a>
 ## Configure
@@ -163,7 +170,9 @@ After changing a variable, restart Pyron using `supervisorctl restart pyron` com
   * [Rewrite method](#config-rewrite-method)
   * [Response timeout](#config-response-timeout)
   * [Retry](#config-retry)
-  * [Preserve Host header](#config-preserve-host--header)
+  * [Preserve Host header](#config-preserve-host-header)
+  * [Request body handling (buffer/stream/drop)](#config-request-body-handling)
+  * [Request body size limit](#config-request-body-limit)
 * [API groups](#config-api-groups)
 * [Service discovery](#config-service-discovery)
   * [Consul service discovery](#sd-consul)
@@ -209,7 +218,7 @@ Above `meta-config.json` defines two configuration stores: `config.json` from JA
 
 `config.json` defines minimal configuration required to run Pyron. Routing rules are provided in `rules.json`.
 
-You will find `meta-config.json` in `/opt/pyron` folder.
+You will find `meta-config.json` in `install/configs` folder.
 
 Learn how to read configuration from [Consul](docs/howtos/config-store-consul.md) and secrets from [Vault](docs/howtos/config-store-vault.md).
 
@@ -459,6 +468,75 @@ Example: client's call `POST /user` is proxied to target `PUT /user`.
 
 By default, Pyron sends target host in Host header to target service, set `preserveHostHeader` to true to send Host header sent by the client instead.
 
+<a id="config-request-body-handling"></a>
+#### Request body handling (buffer/stream/drop)
+
+```json
+{
+  "rules": [
+    {
+      "default": {
+        "targetHost": "example.com",
+        "targetPort": 80
+      },
+      "endpoints": [
+        {
+          "method": "POST",
+          "pathPattern": "/user",
+          "requestBody": "buffer"
+        }
+      ]
+    }
+  ]
+}
+```
+
+| Attribute     | Description                                                             |
+|:--------------|:------------------------------------------------------------------------|
+| requestBody   | body handling strategy (`buffer`, `stream` or `drop`, default `buffer`) |
+
+* `buffer` - load entire body into memory, required by some plugins (e.g. `transform-request`)
+* `stream` - stream the body directly to target service (after applying request plugins)
+* `drop` - ignore the body, do not transfer it to target service (`Content-Length` header of target request is set to 0)
+
+<a id="config-request-body-limit"></a>
+#### Request body size limit
+
+```json
+{
+  "rules": [
+    {
+      "default": {
+        "targetHost": "example.com",
+        "targetPort": 80
+      },
+      "endpoints": [
+        {
+          "method": "POST",
+          "pathPattern": "/user",
+          "requestBodyMaxSize": 100
+        }
+      ]
+    }
+  ]
+}
+```
+
+| Attribute            | Description                                                      |
+|:---------------------|:-----------------------------------------------------------------|
+| requestBodyMaxSize   | max number of kilobytes transferred to target service (optional) |
+
+> NOTE<br/>
+> If maximum body size is reached then Pyron responds to the client with `413` status code.
+> <br/>
+> <br/>
+> If the request body is using `chunked` Transfer-Encoding (content length is not known upfront) and `requestBody` is `stream`
+> then the body streaming to target service stops when `requestBodyMaxSize` kilobytes has been streamed.
+> Otherwise no data is sent to target service if `requestBodyMaxSize` limit would be reached.
+> <br/>
+> <br/>
+> Set DEFAULT_REQUEST_BODY_MAX_SIZE env variable with default `requestBodyMaxSize` for all routing rules.
+
 <a id="config-api-groups"></a>
 ### API Groups
 
@@ -691,13 +769,20 @@ Configure `io.vertx.circuitbreaker.CircuitBreakerOptions` in `circuitBreaker` ob
 
 Add `tracing/jaeger` to `MODULES` environment variable, i.e. `MODULES=["tracing/jaeger"]`.
 
-| Env variable                      | Description                                    |
-|:----------------------------------|:-----------------------------------------------|
-| TRACING_SERVICE_NAME              | Pyron name in Jaeger                            |
-| JAEGER_AGENT_HOST                 | Jaeger agent host                              |
-| JAEGER_AGENT_PORT                 | Jaeger agent port (optional)                   |
-| JAEGER_SAMPLER_MANAGER_HOST_PORT  | Jaeger sampler host:port (optional)            |
-| TRACING_FORMAT                    | tracing format - cloudentity, jaeger, zipkin   |
+| Env variable                      | Description                                                         |
+|:----------------------------------|:--------------------------------------------------------------------|
+| TRACING_SERVICE_NAME              | Pyron name in Jaeger                                                |
+| JAEGER_AGENT_HOST                 | Jaeger agent host (optional)                                        |
+| JAEGER_AGENT_PORT                 | Jaeger agent port (optional)                                        |
+| JAEGER_SAMPLER_MANAGER_HOST_PORT  | Jaeger sampler host:port (optional)                                 |
+| TRACING_FORMAT                    | tracing format: cloudentity, jaeger, zipkin (default `cloudentity`) |
+
+`cloudentity` tracing format allows configuration of span context key and baggage item prefix:
+
+| Env variable            | Description                                            |
+|:------------------------|:-------------------------------------------------------|
+| TRACING_TRACE_ID        | span context key (default `x-trace-id`)                |
+| TRACING_BAGGAGE_PREFIX  | baggage item prefix (default `x-ctx-`)                 |
 
 <a id="config-access-log"></a>
 ### Access log
@@ -748,7 +833,9 @@ Add `tracing/jaeger` to `MODULES` environment variable, i.e. `MODULES=["tracing/
 | gateway.method        | method of matching rule                                                                                   |
 | gateway.path          | path pattern of matching rule                                                                             |
 | gateway.pathPrefix    | path prefix of matching rule                                                                              |
-| gateway.aborted       | true if Pyron aborted the call without proxying to target service; false otherwise                         |
+| gateway.aborted       | true if Pyron aborted the call without proxying to target service; false otherwise                        |
+| gateway.interrupted   | true if the call was interrupted by the client; false otherwise                                           |
+| gateway.failed        | true if an exception occurred on target call or plugin application; not set otherwise                     |
 | gateway.targetService | target service of matching rule                                                                           |
 | request.headers       | request headers                                                                                           |
 | timeMs                | time from receiving the request body till writing full response body                                      |
@@ -789,8 +876,9 @@ Plugins extend request-response flow, e.g. can enforce authorization rules, modi
 * [Authentication](docs/plugins/authn.md)
 * [Request transformation](docs/plugins/transform-request.md)
 * [CORS](docs/plugins/cors.md)
+* [ACP authorizer](docs/plugins/acp-authz.md)
 
-Read about [plugins configuration](docs/plugins.md) in routing rules.
+Read about [plugins application](docs/plugins.md) in routing rules.
 
 <a id="how-to"></a>
 ### How to
